@@ -17,6 +17,12 @@ const hasResendConfig = () =>
         process.env.EMAIL_FROM
     );
 
+const hasBrevoApiConfig = () =>
+    Boolean(
+        process.env.BREVO_API_KEY &&
+        process.env.EMAIL_FROM
+    );
+
 const isIPv4 = (value) => /^\d{1,3}(\.\d{1,3}){3}$/.test(String(value || ''));
 
 const resolveSmtpHosts = async () => {
@@ -63,7 +69,7 @@ const createTransporter = ({ host, servername }) =>
         },
     });
 
-export const isEmailConfigured = () => hasResendConfig() || hasEmailConfig();
+export const isEmailConfigured = () => hasResendConfig() || hasBrevoApiConfig() || hasEmailConfig();
 
 const toResendAttachments = async (attachments = []) => {
     const items = [];
@@ -117,9 +123,65 @@ const sendWithResend = async ({ to, subject, html, attachments = [] }) => {
     return body;
 };
 
+const parseFrom = (value) => {
+    const text = String(value || '').trim();
+    const matched = text.match(/^(.*)<([^>]+)>$/);
+    if (!matched) {
+        return { name: '', email: text };
+    }
+    return {
+        name: matched[1].trim().replace(/^"|"$/g, ''),
+        email: matched[2].trim(),
+    };
+};
+
+const sendWithBrevoApi = async ({ to, subject, html, attachments = [] }) => {
+    const sender = parseFrom(process.env.EMAIL_FROM);
+    const recipients = (Array.isArray(to) ? to : [to])
+        .map((entry) => String(entry || '').trim())
+        .filter(Boolean)
+        .map((email) => ({ email }));
+
+    if (!sender.email || recipients.length === 0) {
+        throw new Error('Invalid sender or recipient for Brevo email');
+    }
+
+    const brevoAttachments = await toResendAttachments(attachments);
+    const payload = {
+        sender: sender.name ? sender : { email: sender.email },
+        to: recipients,
+        subject,
+        htmlContent: html,
+    };
+
+    if (brevoAttachments.length > 0) {
+        payload.attachment = brevoAttachments.map((item) => ({
+            name: item.filename,
+            content: item.content,
+        }));
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const body = await response.text();
+    if (!response.ok) {
+        throw new Error(`Brevo API error (${response.status}): ${body}`);
+    }
+
+    return body;
+};
+
 export const sendEmail = async ({ to, subject, html, attachments = [] }) => {
-    if (!hasResendConfig() && !hasEmailConfig()) {
-        throw new Error('Email service is not configured. Use RESEND_API_KEY + EMAIL_FROM, or SMTP EMAIL_* settings.');
+    if (!hasResendConfig() && !hasBrevoApiConfig() && !hasEmailConfig()) {
+        throw new Error('Email service is not configured. Use RESEND_API_KEY or BREVO_API_KEY with EMAIL_FROM, or SMTP EMAIL_* settings.');
     }
 
     const mailOptions = {
@@ -134,6 +196,12 @@ export const sendEmail = async ({ to, subject, html, attachments = [] }) => {
         if (hasResendConfig()) {
             const result = await sendWithResend({ to, subject, html, attachments });
             console.log(`Email sent via Resend: ${result}`);
+            return result;
+        }
+
+        if (hasBrevoApiConfig()) {
+            const result = await sendWithBrevoApi({ to, subject, html, attachments });
+            console.log(`Email sent via Brevo API: ${result}`);
             return result;
         }
 
