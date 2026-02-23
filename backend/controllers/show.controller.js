@@ -12,9 +12,9 @@ const getShowDateTime = (show) => {
     }
 
     const showDate = new Date(show.date);
-    const y = showDate.getUTCFullYear();
-    const m = String(showDate.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(showDate.getUTCDate()).padStart(2, '0');
+    const y = showDate.getFullYear();
+    const m = String(showDate.getMonth() + 1).padStart(2, '0');
+    const d = String(showDate.getDate()).padStart(2, '0');
     const isoDate = `${y}-${m}-${d}`;
     return new Date(`${isoDate}T${show.time}`);
 };

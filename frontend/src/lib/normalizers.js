@@ -8,6 +8,16 @@ const toIsoDate = (value) => {
   return `${year}-${month}-${day}`;
 };
 
+const toLocalIsoDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const toLocalDateKey = (value) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
@@ -23,7 +33,7 @@ const getShowStartTime = (show) => {
     if (!Number.isNaN(startsAt.getTime())) return startsAt
   }
 
-  const baseDate = toIsoDate(show?.date)
+  const baseDate = toLocalIsoDate(show?.date)
   if (!baseDate || !show?.time) return null
   const fallback = new Date(`${baseDate}T${show.time}`)
   return Number.isNaN(fallback.getTime()) ? null : fallback

@@ -53,8 +53,7 @@ const protectCustomer = async (req, res, next) => {
         const token = resolveToken(req, CUSTOMER_COOKIE);
         await attachUserFromToken(req, res, token);
         if (req.user?.isAdmin) {
-            res.status(403);
-            throw new Error('Admin accounts are not allowed on client booking routes');
+            return sendAuthError(res, 403, 'Admin accounts are not allowed on client booking routes');
         }
         next();
     } catch (error) {
@@ -69,8 +68,7 @@ const protectAdmin = async (req, res, next) => {
         const token = resolveToken(req, ADMIN_COOKIE);
         await attachUserFromToken(req, res, token);
         if (!req.user?.isAdmin) {
-            res.status(401);
-            throw new Error('Not authorized as an admin');
+            return sendAuthError(res, 401, 'Not authorized as an admin');
         }
         next();
     } catch (error) {

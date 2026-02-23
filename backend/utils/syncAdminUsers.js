@@ -39,7 +39,7 @@ export const syncAdminUsers = async () => {
                 },
                 {
                     upsert: true,
-                    new: true,
+                    returnDocument: 'after',
                     setDefaultsOnInsert: true,
                 }
             );

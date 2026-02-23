@@ -37,9 +37,9 @@ const SeatLayout = () => {
   }
   const toUtcDateKey = (value) => {
     const dt = new Date(value)
-    const year = dt.getUTCFullYear()
-    const month = String(dt.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(dt.getUTCDate()).padStart(2, '0')
+    const year = dt.getFullYear()
+    const month = String(dt.getMonth() + 1).padStart(2, '0')
+    const day = String(dt.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
   }
   const getShowStartTime = (show) => {
