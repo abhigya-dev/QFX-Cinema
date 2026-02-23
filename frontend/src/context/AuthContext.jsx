@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { API_BASE_URL, api, USE_DUMMY_DATA } from '../lib/api';
+import { API_BASE_URL, api, CUSTOMER_TOKEN_KEY, USE_DUMMY_DATA } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     logoutPromiseRef.current = (async () => {
       setLoggingOut(true);
       await api.post('/auth/logout', {});
+      window.localStorage.removeItem(CUSTOMER_TOKEN_KEY);
       setUser(null);
       return true;
     })();

@@ -639,8 +639,9 @@ export const googleLogin = async (req, res) => {
             });
         }
 
-        generateToken(res, user._id);
-        return res.redirect(`${process.env.CLIENT_URL || ''}/`);
+        const token = generateToken(res, user._id, { cookieName: CUSTOMER_COOKIE });
+        const redirectUrl = `${clientRedirect}#google_token=${encodeURIComponent(token)}`;
+        return res.redirect(redirectUrl);
     } catch (error) {
         console.error('Google OAuth failed:', error.message);
         return res.redirect(`${clientRedirect}?google_error=oauth_failed`);

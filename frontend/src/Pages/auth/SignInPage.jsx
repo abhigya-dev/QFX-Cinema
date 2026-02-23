@@ -4,15 +4,42 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import blurSvg from '../../assets/blur.svg'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
-import { USE_DUMMY_DATA } from '../../lib/api'
+import { CUSTOMER_TOKEN_KEY, USE_DUMMY_DATA } from '../../lib/api'
 import { useForm } from 'react-hook-form'
+import { useEffect } from 'react'
 
 const SignInPage = () => {
   const [showPassword, setShowPassword] = useState(false)
-  const { login, googleLogin } = useAuth()
+  const { login, googleLogin, refreshUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
+
+  useEffect(() => {
+    const hash = window.location.hash || ''
+    const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash)
+    const googleToken = params.get('google_token')
+    if (!googleToken) return
+
+    const completeGoogleLogin = async () => {
+      try {
+        window.localStorage.setItem(CUSTOMER_TOKEN_KEY, googleToken)
+        const me = await refreshUser()
+        if (!me) {
+          throw new Error('Google login session could not be restored')
+        }
+        toast.success('Signed in with Google')
+        navigate('/')
+      } catch (error) {
+        window.localStorage.removeItem(CUSTOMER_TOKEN_KEY)
+        toast.error(error.message)
+      } finally {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    }
+
+    completeGoogleLogin()
+  }, [navigate, refreshUser])
 
   const onSubmit = async (values) => {
     try {

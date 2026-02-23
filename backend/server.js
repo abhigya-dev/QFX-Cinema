@@ -60,7 +60,12 @@ app.use("/api/inngest", serve({
 // Webhook route needs raw body parser (must be before express.json)
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
-const normalizedAllowedOrigin = String(process.env.CLIENT_URL || '').replace(/\/$/, '');
+const normalizedAllowedOrigins = [
+    process.env.CLIENT_URL,
+    ...(process.env.CLIENT_URLS || '').split(','),
+]
+    .map((origin) => String(origin || '').trim().replace(/\/$/, ''))
+    .filter(Boolean);
 
 // Middleware
 app.use(cors({
@@ -68,7 +73,7 @@ app.use(cors({
         // allow non-browser tools and server-to-server calls
         if (!origin) return callback(null, true);
         const normalizedOrigin = String(origin).replace(/\/$/, '');
-        if (normalizedOrigin === normalizedAllowedOrigin) {
+        if (normalizedAllowedOrigins.includes(normalizedOrigin)) {
             return callback(null, true);
         }
         return callback(new Error('Not allowed by CORS'));
