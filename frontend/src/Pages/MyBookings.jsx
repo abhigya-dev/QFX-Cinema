@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_BASE_URL, api } from '../lib/api'
+import { API_BASE_URL, api, CUSTOMER_TOKEN_KEY } from '../lib/api'
 import dateTimeFormat from '../lib/showDate-Timefotmat'
 import currencyFormat from '../lib/currencyFormat'
 import toast from 'react-hot-toast'
@@ -65,9 +65,11 @@ const MyBookings = () => {
   const handleDownloadTicket = async (bookingId) => {
     try {
       setDownloadingBookingId(bookingId)
+      const customerToken = window.localStorage.getItem(CUSTOMER_TOKEN_KEY)
       const response = await fetch(`${API_BASE_URL}/bookings/my/${bookingId}/ticket`, {
         method: 'GET',
         credentials: 'include',
+        headers: customerToken ? { Authorization: `Bearer ${customerToken}` } : {},
       })
 
       if (!response.ok) {
