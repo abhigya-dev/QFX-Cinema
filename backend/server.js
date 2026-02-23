@@ -2,6 +2,7 @@ import express from 'express';
 import 'dotenv/config'
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import dns from 'node:dns';
 import connectMongoDB from './database/connection.js';
 import { errorHandler, notFound } from './middleware/error.middleware.js';
 import { serve } from "inngest/express";
@@ -23,6 +24,10 @@ import { isEmailConfigured } from './utils/email.js';
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+
+// Render environments may have broken IPv6 routes to Gmail SMTP.
+// Force Node DNS lookups to prefer IPv4 globally.
+dns.setDefaultResultOrder('ipv4first');
 
 if (!isEmailConfigured()) {
     console.warn('Email service is not fully configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM.');
