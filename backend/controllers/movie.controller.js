@@ -2,22 +2,6 @@ import Movie from '../database/models/movie.model.js';
 import Show from '../database/models/show.model.js';
 import { cleanupExpiredShows } from '../utils/showCleanup.js';
 
-const getShowDateTime = (show) => {
-    if (show?.startsAt) {
-        const startsAt = new Date(show.startsAt);
-        if (!Number.isNaN(startsAt.getTime())) {
-            return startsAt;
-        }
-    }
-
-    const showDate = new Date(show.date);
-    const y = showDate.getFullYear();
-    const m = String(showDate.getMonth() + 1).padStart(2, '0');
-    const d = String(showDate.getDate()).padStart(2, '0');
-    const isoDate = `${y}-${m}-${d}`;
-    return new Date(`${isoDate}T${show.time}`);
-};
-
 // @desc    Get all movies
 // @route   GET /api/movies
 // @access  Public
@@ -33,8 +17,9 @@ export const getNowShowingMovies = async (req, res) => {
     await cleanupExpiredShows();
 
     const now = new Date();
-    const shows = await Show.find({}).select('movieId startsAt date time price').lean();
-    const futureShows = shows.filter((show) => getShowDateTime(show) >= now);
+    const futureShows = await Show.find({ startsAt: { $gte: now } })
+        .select('movieId startsAt price')
+        .lean();
     const movieIdsWithShows = Array.from(new Set(futureShows.map((show) => String(show.movieId))));
 
     if (!movieIdsWithShows.length) {

@@ -67,10 +67,13 @@ export const updateMovieShowPrice = async (req, res) => {
         throw new Error('Valid price is required');
     }
 
-    const shows = await Show.find({ movieId }).lean();
+    const shows = await Show.find({ movieId, startsAt: { $gte: new Date() } }).lean();
     const now = new Date();
     const futureShowIds = shows
-        .filter((show) => getShowDateTime(show) >= now)
+        .filter((show) => {
+            const showDateTime = getShowDateTime(show);
+            return showDateTime && showDateTime >= now;
+        })
         .map((show) => show._id);
 
     if (!futureShowIds.length) {
@@ -94,12 +97,12 @@ export const updateMovieShowPrice = async (req, res) => {
 export const getAdminShows = async (req, res) => {
     await cleanupExpiredShows();
 
+    const now = new Date();
     const shows = await Show.find({})
         .populate('movieId')
         .sort({ startsAt: -1, date: -1, time: -1 })
         .lean();
-    const now = new Date();
-    const activeShows = shows.filter((show) => getShowDateTime(show) >= now);
+    const activeShows = shows.filter((show) => show?.startsAt && new Date(show.startsAt) >= now);
     const showIds = activeShows.map((show) => show._id);
     const bookingStats = await Booking.aggregate([
         { $match: { showId: { $in: showIds }, status: 'confirmed' } },
@@ -184,7 +187,7 @@ export const getAdminDashboard = async (req, res) => {
     const now = new Date();
     const activeMovies = new Set(
         shows
-            .filter((show) => getShowDateTime(show) >= now)
+            .filter((show) => show?.startsAt && new Date(show.startsAt) >= now)
             .map((show) => String(show.movieId))
     ).size;
     const totalRevenue = confirmedBookings.reduce((sum, booking) => sum + booking.totalAmount, 0);
