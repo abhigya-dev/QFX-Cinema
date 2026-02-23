@@ -27,6 +27,7 @@ const SeatLayout = () => {
   const [reservationEndsAt, setReservationEndsAt] = useState(null)
   const [secondsLeft, setSecondsLeft] = useState(0)
   const groupRows = [['A', 'B'], ['C', 'D'], ['E', 'F'], ['G', 'H'], ['I', 'J']]
+  const redirectPath = `/movies/${movieId}/${date}`
 
   const toLocalDateKey = (value) => {
     const dt = new Date(value)
@@ -249,7 +250,7 @@ const SeatLayout = () => {
     } catch (error) {
       if (error.message.toLowerCase().includes('not authorized')) {
         toast.error('Please login first')
-        navigate('/auth/sign-in')
+        navigate('/auth/sign-in', { state: { redirectTo: redirectPath } })
         return
       }
       toast.error(error.message)
@@ -363,7 +364,7 @@ const SeatLayout = () => {
     } catch (error) {
       if (error.message.toLowerCase().includes('not authorized')) {
         toast.error('Please login first')
-        navigate('/auth/sign-in')
+        navigate('/auth/sign-in', { state: { redirectTo: redirectPath } })
         return
       }
       toast.error(error.message)

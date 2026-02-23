@@ -47,7 +47,7 @@ const MovieCard = ({ movieDetail, compact = false, home = false }) => {
                 {(movieDetail.vote_average || 0).toFixed(1)}
               </p>
               {movieDetail.showPrice !== null && (
-                <p className='mt-1 inline-flex rounded-full bg-primary-dull/20 px-2 py-0.5 text-xs font-semibold text-primary-dull'>
+                <p className='mt-1 inline-flex rounded-full border border-primary-dull/70 bg-primary-dull px-2.5 py-1 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]'>
                   Ticket ${Number(movieDetail.showPrice).toFixed(2)}
                 </p>
               )}
@@ -88,7 +88,7 @@ const MovieCard = ({ movieDetail, compact = false, home = false }) => {
                  <div className='text-right'>
                    <p className='flex gap-2 items-center justify-end'><Star size={18} color='#D63858' fill='#D63858'/>{(movieDetail.vote_average || 0).toFixed(1) }</p>
                    {movieDetail.showPrice !== null && (
-                     <p className='mt-1 inline-flex rounded-full bg-primary-dull/20 px-2 py-0.5 text-xs font-semibold text-primary-dull'>
+                     <p className='mt-1 inline-flex rounded-full border border-primary-dull/70 bg-primary-dull px-2.5 py-1 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)]'>
                        Ticket ${Number(movieDetail.showPrice).toFixed(2)}
                      </p>
                    )}

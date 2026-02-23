@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import blurSvg from '../../assets/blur.svg'
@@ -15,12 +15,15 @@ const SignInPage = () => {
   const location = useLocation()
   const redirectTo = location.state?.redirectTo
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
+  const processedGoogleTokenRef = useRef(null)
 
   useEffect(() => {
     const hash = window.location.hash || ''
     const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash)
     const googleToken = params.get('google_token')
     if (!googleToken) return
+    if (processedGoogleTokenRef.current === googleToken) return
+    processedGoogleTokenRef.current = googleToken
 
     const completeGoogleLogin = async () => {
       try {
