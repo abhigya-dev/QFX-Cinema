@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+
+
+@theme{
+    --color-primary:#484565;
+    --color-primary-dull:#D63858;
+}
+*{
+    font-family: "Outfit", sans-serif;
+    scrollbar-width:thin;
+    scrollbar-color: #787777,#1e1e1e;
+    
+    
+
+}
+
+body{
+    color: white;
+    background-color: #09090B;
+}
+.hide-scrollbar-x {
+  overflow-x: auto;
+  scrollbar-width: none; 
+}
+.hide-scrollbar-x::-webkit-scrollbar {
+  display: none;
+}
+
+
+.admin-scrollbar{
+  scrollbar-width: thin;
+  scrollbar-color:#787777 #1e1e1e;
+}
+
+.admin-scrollbar::-webkit-scrollbar{
+  height: 6px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track{
+  background: #1e1e1e;
+  border-radius: 999px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb{
+  background: #787777;
+  border-radius: 999px;
+}
+
+
+no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+

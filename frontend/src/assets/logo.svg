@@ -1,0 +1,11 @@
+<svg viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- QFX in red -->
+  <text x="10" y="55" font-family="Arial Black, sans-serif" font-size="48" font-weight="900" fill="#E50914" letter-spacing="0">
+    QFX
+  </text>
+  
+  <!-- Cinemas in white, positioned right after QFX -->
+  <text x="125" y="55" font-family="Arial Black, sans-serif" font-size="48" font-weight="900" fill="#FFFFFF" letter-spacing="0">
+    Cinemas
+  </text>
+</svg>
