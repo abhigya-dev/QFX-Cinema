@@ -66,14 +66,14 @@ const SelectDate = ({showDate,id}) => {
 
   return (
     <div id="selectDate" className='relative overflow-hidden lg:py-20'>
-    <img src={blurSvg} alt="" className='absolute lg:-top-14 top-0 w-45 h-60 left-2 lg:-left-20 lg:w-50 lg:h-60 object-cover' />
+    <img src={blurSvg} alt="" className='pointer-events-none absolute z-0 lg:-top-14 top-0 w-45 h-60 left-2 lg:-left-20 lg:w-50 lg:h-60 object-cover' />
     <img
   src={blurSvg}
   alt=""
-  className=" absolute bottom-0 right-0 w-[11rem] h-[15rem] object-cover lg:-bottom-10 lg:-right-10 lg:w-[12.5rem] lg:h-[15rem]
+  className="pointer-events-none absolute z-0 bottom-0 right-0 w-[11rem] h-[15rem] object-cover lg:-bottom-10 lg:-right-10 lg:w-[12.5rem] lg:h-[15rem]
   "
 />
-       <div className='w-full rounded-md border border-primary-dull/40 bg-primary-dull/15 px-4 py-6 lg:px-10 lg:py-10'>
+       <div className='relative z-10 w-full rounded-md border border-primary-dull/40 bg-primary-dull/15 px-4 py-6 lg:px-10 lg:py-10'>
        <p className='font-bold text-lg'>Choose Date</p>
        <div className='z-30 mt-5 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between'>
        <div className='flex w-full items-center justify-center gap-2 sm:gap-4'>

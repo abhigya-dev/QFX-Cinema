@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
-import { ChevronDown, Menu, Search, Settings, Ticket, UserCircle2, X, LogOut } from 'lucide-react'
+import { ChevronDown, Menu, Search, Settings, Ticket, X, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -38,7 +38,7 @@ const Navbar = () => {
     <header className='fixed left-0 top-0 z-50 w-full bg-transparent'>
       <div className='flex items-center justify-between px-3 py-3 sm:px-5 sm:py-4 md:px-10 lg:px-18'>
         <Link to='/' className='shrink-0'>
-          <img src={assets.logo} alt='logo' className='w-28 sm:w-36 md:w-44 lg:w-56' />
+          <img src={assets.logo} alt='logo' className='w-32 sm:w-40 md:w-48 lg:w-56' />
         </Link>
 
         <div className='hidden gap-8 rounded-full border border-white/20 bg-white/10 px-6 py-3 shadow-lg backdrop-blur-md lg:flex'>
@@ -128,12 +128,6 @@ const Navbar = () => {
           <Link onClick={() => setMenuOpen(false)} to='/movies'>Releases</Link>
           {isClientAuthenticated && <Link onClick={() => setMenuOpen(false)} to='/favorites'>Favorites</Link>}
           {isClientAuthenticated && <Link onClick={() => setMenuOpen(false)} to='/mybookings'>My Bookings</Link>}
-          {isClientAuthenticated && (
-            <Link onClick={() => setMenuOpen(false)} to='/settings' className='inline-flex items-center gap-2'>
-              <UserCircle2 size={16} />
-              Settings
-            </Link>
-          )}
         </div>
       )}
     </header>
