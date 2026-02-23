@@ -18,10 +18,18 @@ import bookingRoutes from './routes/booking.route.js';
 import { startSeatReleaseJob } from './utils/seatReleaseJob.js';
 import { syncAdminUsers } from './utils/syncAdminUsers.js';
 import { startShowCleanupJob } from './utils/showCleanup.js';
+import { isEmailConfigured } from './utils/email.js';
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+
+if (!isEmailConfigured()) {
+    console.warn('Email service is not fully configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM.');
+}
+if (!process.env.INNGEST_EVENT_KEY || !process.env.INNGEST_SIGNING_KEY) {
+    console.warn('Inngest keys are missing. Inngest functions may not run in production.');
+}
 
 // Connect to MongoDB
 await connectMongoDB();

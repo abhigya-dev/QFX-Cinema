@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import generateToken from '../../utils/generateToken.js';
 import { inngest } from '../../inngest/client.js';
-import { sendEmail, getOTPTemplate, getResetPasswordTemplate } from '../../utils/email.js';
+import { sendEmail, getOTPTemplate, getResetPasswordTemplate, isEmailConfigured } from '../../utils/email.js';
 
 const CUSTOMER_COOKIE = 'jwt';
 const ADMIN_COOKIE = 'admin_jwt';
@@ -91,6 +91,10 @@ export const signup = async (req, res) => {
     if (!name || !password || !email) {
         res.status(400);
         throw new Error('Name, email and password are required');
+    }
+    if (!isEmailConfigured()) {
+        res.status(500);
+        throw new Error('Email service is not configured on server');
     }
 
     const userExists = await User.findOne({ email });
@@ -194,6 +198,10 @@ export const resendOTP = async (req, res) => {
     if (!email) {
         res.status(400);
         throw new Error('Email is required');
+    }
+    if (!isEmailConfigured()) {
+        res.status(500);
+        throw new Error('Email service is not configured on server');
     }
 
     const pending = await PendingSignup.findOne({ email });
@@ -429,6 +437,11 @@ export const getAdminMe = async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 export const forgotPassword = async (req, res) => {
+    if (!isEmailConfigured()) {
+        res.status(500);
+        throw new Error('Email service is not configured on server');
+    }
+
     const { email } = req.body;
     const user = await User.findOne({ email });
 

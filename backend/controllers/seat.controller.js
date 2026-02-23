@@ -19,6 +19,14 @@ const emitSeatStatusUpdated = (showId, seats) => {
     });
 };
 
+const safeInngestSend = async (payload) => {
+    try {
+        await inngest.send(payload);
+    } catch (error) {
+        console.warn('Inngest event send failed:', error.message);
+    }
+};
+
 const releaseExpiredSeatsForShow = async (showId) => {
     const expiredSeats = await Seat.find({
         showId,
@@ -99,7 +107,7 @@ export const reserveSeat = async (req, res) => {
     emitSeatStatusUpdated(showId, updatedSeats);
 
     // Trigger Inngest to auto-release if not booked
-    await inngest.send({
+    safeInngestSend({
         name: "seat/reserved",
         data: {
             seatIds,

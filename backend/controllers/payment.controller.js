@@ -62,8 +62,19 @@ const sendBookingTicketEmail = async (bookingId) => {
 
         booking.ticketEmailSent = true;
         await booking.save();
+        return true;
     } finally {
         if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
+    }
+};
+
+const safeInngestSend = async (payload) => {
+    try {
+        await inngest.send(payload);
+        return true;
+    } catch (error) {
+        console.warn('Inngest event send failed:', error.message);
+        return false;
     }
 };
 
@@ -258,13 +269,18 @@ export const verifyCheckoutSession = async (req, res) => {
         );
         await emitSeatStatusUpdated(booking.showId, booking.seatIds);
 
-        await sendBookingTicketEmail(booking._id);
+        try {
+            await sendBookingTicketEmail(booking._id);
+        } catch (error) {
+            console.error('Ticket email send failed:', error.message);
+        }
     }
 
     res.json({
         status: booking.status,
         paymentStatus: session.payment_status,
         bookingId: booking._id,
+        ticketEmailSent: Boolean(booking.ticketEmailSent),
     });
 };
 
@@ -303,21 +319,27 @@ export const stripeWebhook = async (req, res) => {
         await emitSeatStatusUpdated(showId, parsedSeatIds);
 
         if (booking) {
-            await sendBookingTicketEmail(booking._id);
+            try {
+                await sendBookingTicketEmail(booking._id);
+            } catch (error) {
+                console.error('Ticket email send failed in webhook:', error.message);
+            }
         }
 
         // Trigger Inngest booking/confirmed event
-        await inngest.send({
-            name: "booking/confirmed",
-            data: {
-                bookingId: booking._id,
-                userId,
-                showId,
-                movieId,
-                seatIds: parsedSeatIds,
-                totalAmount: session.amount_total / 100,
-            }
-        });
+        if (booking?._id) {
+            await safeInngestSend({
+                name: "booking/confirmed",
+                data: {
+                    bookingId: booking._id,
+                    userId,
+                    showId,
+                    movieId,
+                    seatIds: parsedSeatIds,
+                    totalAmount: session.amount_total / 100,
+                }
+            });
+        }
     }
 
     res.json({ received: true });
