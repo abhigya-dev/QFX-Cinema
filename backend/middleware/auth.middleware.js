@@ -39,7 +39,9 @@ const protect = async (req, res, next) => {
         await attachUserFromToken(req, res, token);
         next();
     } catch (error) {
-        console.error(error);
+        if (!String(error?.message || '').toLowerCase().includes('no token')) {
+            console.error(error);
+        }
         res.status(401);
         throw new Error('Not authorized, token failed');
     }
@@ -55,7 +57,9 @@ const protectCustomer = async (req, res, next) => {
         }
         next();
     } catch (error) {
-        console.error(error);
+        if (!String(error?.message || '').toLowerCase().includes('no token')) {
+            console.error(error);
+        }
         if (!res.statusCode || res.statusCode < 400) {
             res.status(401);
         }
@@ -73,7 +77,9 @@ const protectAdmin = async (req, res, next) => {
         }
         next();
     } catch (error) {
-        console.error(error);
+        if (!String(error?.message || '').toLowerCase().includes('no token')) {
+            console.error(error);
+        }
         if (!res.statusCode || res.statusCode < 400) {
             res.status(401);
         }

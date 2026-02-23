@@ -9,11 +9,14 @@ const generateToken = (res, userId, options = {}) => {
         process.env.CLIENT_URL?.includes('localhost') ||
         process.env.CLIENT_URL?.includes('127.0.0.1');
 
+    const secureCookie = !isLocalhost;
+    const sameSite = isLocalhost ? 'lax' : 'none';
+
     // Set JWT as HTTP-only cookie
     res.cookie(cookieName, token, {
         httpOnly: true,
-        secure: !isLocalhost && process.env.NODE_ENV === 'production',
-        sameSite: isLocalhost ? 'lax' : 'strict',
+        secure: secureCookie,
+        sameSite,
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 

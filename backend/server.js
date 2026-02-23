@@ -47,9 +47,19 @@ app.use("/api/inngest", serve({
 // Webhook route needs raw body parser (must be before express.json)
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
+const normalizedAllowedOrigin = String(process.env.CLIENT_URL || '').replace(/\/$/, '');
+
 // Middleware
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+        // allow non-browser tools and server-to-server calls
+        if (!origin) return callback(null, true);
+        const normalizedOrigin = String(origin).replace(/\/$/, '');
+        if (normalizedOrigin === normalizedAllowedOrigin) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true
 }));
 app.use(express.json());

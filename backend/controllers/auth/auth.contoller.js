@@ -330,13 +330,21 @@ export const adminSignin = async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Public
 export const logout = (req, res) => {
-    res.cookie(CUSTOMER_COOKIE, '', {
+    const isLocalhost =
+        process.env.CLIENT_URL?.includes('localhost') ||
+        process.env.CLIENT_URL?.includes('127.0.0.1');
+    const cookieOptions = {
         httpOnly: true,
         expires: new Date(0),
+        secure: !isLocalhost,
+        sameSite: isLocalhost ? 'lax' : 'none',
+    };
+
+    res.cookie(CUSTOMER_COOKIE, '', {
+        ...cookieOptions,
     });
     res.cookie('jwt', '', {
-        httpOnly: true,
-        expires: new Date(0),
+        ...cookieOptions,
     });
     res.status(200).json({ message: 'Logged out successfully' });
 };
@@ -345,9 +353,18 @@ export const logout = (req, res) => {
 // @route   POST /api/auth/admin/logout
 // @access  Public
 export const adminLogout = (req, res) => {
-    res.cookie(ADMIN_COOKIE, '', {
+    const isLocalhost =
+        process.env.CLIENT_URL?.includes('localhost') ||
+        process.env.CLIENT_URL?.includes('127.0.0.1');
+    const cookieOptions = {
         httpOnly: true,
         expires: new Date(0),
+        secure: !isLocalhost,
+        sameSite: isLocalhost ? 'lax' : 'none',
+    };
+
+    res.cookie(ADMIN_COOKIE, '', {
+        ...cookieOptions,
     });
     res.status(200).json({ message: 'Admin logged out successfully' });
 };
