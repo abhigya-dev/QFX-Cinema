@@ -308,7 +308,7 @@ const SeatLayout = () => {
     const rowSeats = seatsByRow[row] || []
 
     return (
-      <div className='grid min-w-[300px] grid-cols-9 gap-1.5 sm:min-w-[360px] sm:gap-2'>
+      <div className='grid min-w-[360px] grid-cols-9 gap-2.5'>
         {rowSeats.map((seat) => {
           const isSelected = selectedSeat.includes(seat._id)
           const isOwnedReserved =
@@ -434,7 +434,7 @@ const SeatLayout = () => {
           </div>
 
           <div className='mt-6 flex justify-center overflow-x-auto px-1 sm:mt-12 lg:mt-20'>
-            <div className='grid w-full min-w-[300px] max-w-104 grid-cols-1 gap-3'>
+            <div className='grid w-full min-w-[360px] max-w-104 grid-cols-1 gap-4'>
               {groupRows[0].map((row) => (
                 <div key={row}>
                   {createRow(row)}
@@ -444,7 +444,7 @@ const SeatLayout = () => {
           </div>
 
           <div className='w-full overflow-x-auto'>
-            <div className='mx-auto grid min-w-[640px] max-w-4xl grid-cols-2 gap-4 px-1 sm:gap-6 sm:px-0 lg:gap-11'>
+            <div className='mx-auto grid min-w-[760px] max-w-4xl grid-cols-2 gap-11 px-1 sm:px-0'>
               {groupRows.slice(1).map((rows, index) => (
                 <div key={index} className='flex flex-col gap-3'>
                   {rows.map((row) => (

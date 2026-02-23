@@ -55,8 +55,13 @@ const SelectDate = ({showDate,id}) => {
     if(!selectDate){
       toast.error('Please Select Date First');
     }else{
-
-      navigate(`/movies/${id}/${navigateDate}`)
+      const destination = `/movies/${id}/${navigateDate}`
+      if (!user?._id) {
+        toast.error('Please login to continue booking')
+        navigate('/auth/sign-in', { state: { redirectTo: destination } })
+        return
+      }
+      navigate(destination)
     }
   }
   const navigateDate = selectDate
@@ -110,7 +115,7 @@ const SelectDate = ({showDate,id}) => {
        {availableDates.length === 0 && (
         <p className='text-center text-sm text-gray-400 lg:text-left'>No show dates available right now.</p>
        )}
-       <button className='w-full rounded-md bg-primary-dull px-4 py-2 cursor-pointer sm:w-auto'
+       <button className='w-full whitespace-nowrap rounded-md bg-primary-dull px-4 py-2 cursor-pointer sm:w-auto'
        onClick={handleBookNow}
        disabled={availableDates.length === 0 || !navigateDate}
        >

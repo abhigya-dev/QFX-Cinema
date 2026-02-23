@@ -13,6 +13,7 @@ const SignInPage = () => {
   const { login, googleLogin, refreshUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const redirectTo = location.state?.redirectTo
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
 
   useEffect(() => {
@@ -29,7 +30,7 @@ const SignInPage = () => {
           throw new Error('Google login session could not be restored')
         }
         toast.success('Signed in with Google')
-        navigate('/')
+        navigate(redirectTo || '/')
       } catch (error) {
         window.localStorage.removeItem(CUSTOMER_TOKEN_KEY)
         toast.error(error.message)
@@ -39,13 +40,17 @@ const SignInPage = () => {
     }
 
     completeGoogleLogin()
-  }, [navigate, refreshUser])
+  }, [navigate, refreshUser, redirectTo])
 
   const onSubmit = async (values) => {
     try {
       const payload = await login(values.email, values.password)
       toast.success('Signed in successfully')
-      navigate(payload?.isAdmin ? '/admin' : '/')
+      if (payload?.isAdmin) {
+        navigate('/admin')
+        return
+      }
+      navigate(redirectTo || '/')
     } catch (error) {
       toast.error(error.message)
     }
@@ -56,7 +61,11 @@ const SignInPage = () => {
       const payload = await googleLogin()
       if (!payload) return
       toast.success('Signed in with Google')
-      navigate(payload?.isAdmin ? '/admin' : '/')
+      if (payload?.isAdmin) {
+        navigate('/admin')
+        return
+      }
+      navigate(redirectTo || '/')
     } catch (error) {
       toast.error(error.message)
     }
