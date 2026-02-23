@@ -6,6 +6,7 @@ import {
     logout,
     adminLogout,
     getMe,
+    updateMe,
     getAdminMe,
     verifyEmail,
     resendOTP,
@@ -24,6 +25,7 @@ router.post('/admin/signin', adminSignin);
 router.post('/logout', logout);
 router.post('/admin/logout', adminLogout);
 router.get('/me', protectCustomer, getMe);
+router.put('/me', protectCustomer, updateMe);
 router.get('/admin/me', protectAdmin, getAdminMe);
 
 // OTP & Password Reset (Full implementation in Phase 2)

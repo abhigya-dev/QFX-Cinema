@@ -20,6 +20,29 @@ const getShowDateTime = (show) => {
 };
 
 export const cleanupExpiredShows = async () => {
+    const missingStartsAt = await Show.find({ $or: [{ startsAt: { $exists: false } }, { startsAt: null }] })
+        .select('_id date time')
+        .lean();
+
+    if (missingStartsAt.length > 0) {
+        const bulk = missingStartsAt
+            .map((show) => {
+                const startsAt = getShowDateTime(show);
+                if (!startsAt || Number.isNaN(startsAt.getTime())) return null;
+                return {
+                    updateOne: {
+                        filter: { _id: show._id },
+                        update: { $set: { startsAt: startsAt.toISOString() } },
+                    },
+                };
+            })
+            .filter(Boolean);
+
+        if (bulk.length > 0) {
+            await Show.bulkWrite(bulk);
+        }
+    }
+
     const now = new Date();
     const shows = await Show.find({}).select('_id startsAt date time').lean();
     const expiredShowIds = shows

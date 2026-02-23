@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import generateToken from '../../utils/generateToken.js';
 import { inngest } from '../../inngest/client.js';
 import { sendEmail, getOTPTemplate, getResetPasswordTemplate, isEmailConfigured } from '../../utils/email.js';
+import { uploadProfileImageToCloudinary } from '../../utils/cloudinary.js';
 
 const CUSTOMER_COOKIE = 'jwt';
 const ADMIN_COOKIE = 'admin_jwt';
@@ -183,6 +184,7 @@ export const verifyEmail = async (req, res) => {
         email: user.email,
         isVerified: user.isVerified,
         isAdmin: user.isAdmin,
+        imageUrl: user.imageUrl || '',
         message: 'Email verified and account created successfully',
     });
 };
@@ -285,6 +287,7 @@ export const signin = async (req, res) => {
             email: user.email,
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
+            imageUrl: user.imageUrl || '',
         });
     } else {
         res.status(401);
@@ -341,6 +344,7 @@ export const adminSignin = async (req, res) => {
             email: user.email,
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
+            imageUrl: user.imageUrl || '',
         });
     } else {
         res.status(401);
@@ -404,6 +408,7 @@ export const getMe = async (req, res) => {
             email: user.email,
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
+            imageUrl: user.imageUrl || '',
         });
     } else {
         res.status(404);
@@ -428,6 +433,49 @@ export const getAdminMe = async (req, res) => {
         email: user.email,
         isVerified: user.isVerified,
         isAdmin: user.isAdmin,
+        imageUrl: user.imageUrl || '',
+    });
+};
+
+// @desc    Update customer profile
+// @route   PUT /api/auth/me
+// @access  Private (customer cookie)
+export const updateMe = async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (!user || user.isAdmin) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    const nextName = String(req.body.name || '').trim();
+    const profileImage = String(req.body.profileImage || '').trim();
+
+    if (nextName) {
+        user.name = nextName;
+    }
+
+    if (profileImage) {
+        if (profileImage.startsWith('data:image/')) {
+            user.imageUrl = await uploadProfileImageToCloudinary(profileImage);
+        } else if (/^https?:\/\//i.test(profileImage)) {
+            user.imageUrl = profileImage;
+        } else {
+            res.status(400);
+            throw new Error('Invalid profile image');
+        }
+    }
+
+    await user.save();
+
+    res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isVerified: user.isVerified,
+        isAdmin: user.isAdmin,
+        imageUrl: user.imageUrl || '',
+        message: 'Profile updated successfully',
     });
 };
 
@@ -587,6 +635,7 @@ export const googleLogin = async (req, res) => {
                 password: hashedPassword,
                 isVerified: true,
                 isAdmin: shouldGrantAdmin(profile.email),
+                imageUrl: profile.picture || '',
             });
         }
 
