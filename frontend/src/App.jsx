@@ -23,6 +23,7 @@ import RequireAdmin from "./Components/RequireAdmin"
 import RequireCustomer from "./Components/RequireCustomer"
 import BookingSuccess from "./Pages/BookingSuccess"
 import BookingCancel from "./Pages/BookingCancel"
+import Settings from "./Pages/Settings"
 
 function App() {
 
@@ -46,6 +47,7 @@ function App() {
     <Route path='/movies/:id/:date' element={<RequireCustomer><SeatLayout/></RequireCustomer>}/>
     <Route path='/mybookings' element={<RequireCustomer><MyBookings/></RequireCustomer>}/>
     <Route path='/favorites' element={<RequireCustomer><Favorites/></RequireCustomer>}/>
+    <Route path='/settings' element={<RequireCustomer><Settings/></RequireCustomer>}/>
     <Route path='/auth/sign-in' element={<SignInPage/>}/>
     <Route path='/auth/sign-up' element={<SignUpPage/>}/>
     <Route path='/auth/forgot-password' element={<ForgotPasswordPage/>}/>

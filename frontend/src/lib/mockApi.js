@@ -128,6 +128,7 @@ const asPublicUser = (user) => ({
   email: user.email,
   isVerified: Boolean(user.isVerified),
   isAdmin: Boolean(user.isAdmin),
+  imageUrl: user.imageUrl || '',
 })
 
 const getMovieById = (movieId) => dummyShowsData.find((movie) => movie._id === movieId)
@@ -183,6 +184,21 @@ export const handleMockRequest = (path, method, body) => {
   if (path === '/auth/logout' && method === 'POST') {
     localStorage.removeItem(SESSION_KEY)
     return { message: 'Logged out successfully' }
+  }
+
+  if (path === '/auth/me' && method === 'PUT') {
+    const users = seedUsers()
+    const session = read(SESSION_KEY, null)
+    const user = users.find((item) => item._id === session?.userId)
+    if (!user) throw new Error('Not authorized, user not found')
+    if (typeof body.name === 'string' && body.name.trim()) {
+      user.name = body.name.trim()
+    }
+    if (typeof body.profileImage === 'string' && body.profileImage.trim()) {
+      user.imageUrl = body.profileImage
+    }
+    write(USERS_KEY, users)
+    return { ...asPublicUser(user), message: 'Profile updated successfully' }
   }
 
   if (path === '/auth/forgot-password' && method === 'POST') {

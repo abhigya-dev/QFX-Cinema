@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { API_BASE_URL, api, USE_DUMMY_DATA } from '../lib/api';
 
 const AuthContext = createContext(null);
@@ -8,6 +8,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [adminUser, setAdminUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [adminLoggingOut, setAdminLoggingOut] = useState(false);
+  const logoutPromiseRef = useRef(null);
+  const adminLogoutPromiseRef = useRef(null);
 
   const refreshUser = async () => {
     try {
@@ -70,8 +74,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await api.post('/auth/logout', {});
-    setUser(null);
+    if (logoutPromiseRef.current) {
+      return false;
+    }
+
+    logoutPromiseRef.current = (async () => {
+      setLoggingOut(true);
+      await api.post('/auth/logout', {});
+      setUser(null);
+      return true;
+    })();
+
+    try {
+      return await logoutPromiseRef.current;
+    } finally {
+      logoutPromiseRef.current = null;
+      setLoggingOut(false);
+    }
+  };
+
+  const updateProfile = async ({ name, profileImage }) => {
+    const payload = await api.put('/auth/me', { name, profileImage });
+    setUser(payload);
+    return payload;
   };
 
   const adminLogin = async (email, password) => {
@@ -81,8 +106,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const adminLogout = async () => {
-    await api.post('/auth/admin/logout', {});
-    setAdminUser(null);
+    if (adminLogoutPromiseRef.current) {
+      return false;
+    }
+
+    adminLogoutPromiseRef.current = (async () => {
+      setAdminLoggingOut(true);
+      await api.post('/auth/admin/logout', {});
+      setAdminUser(null);
+      return true;
+    })();
+
+    try {
+      return await adminLogoutPromiseRef.current;
+    } finally {
+      adminLogoutPromiseRef.current = null;
+      setAdminLoggingOut(false);
+    }
   };
 
   const value = {
@@ -96,12 +136,15 @@ export const AuthProvider = ({ children }) => {
     verifySignupOtp,
     resendSignupOtp,
     logout,
+    updateProfile,
     adminLogout,
     refreshUser,
     refreshAdminUser,
     isAuthenticated: Boolean(user),
     isClientAuthenticated: Boolean(user),
     isAdminAuthenticated: Boolean(adminUser),
+    loggingOut,
+    adminLoggingOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

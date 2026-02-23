@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 
 const SideBar = () => {
   const navigate = useNavigate()
-  const { adminLogout } = useAuth()
+  const { adminLogout, adminLoggingOut } = useAuth()
 
   const user = {
     firstName: 'Admin',
@@ -40,7 +40,8 @@ const SideBar = () => {
 
   const handleAdminLogout = async () => {
     try {
-      await adminLogout()
+      const didLogout = await adminLogout()
+      if (!didLogout) return
       toast.success('Admin logged out')
       navigate('/auth/sign-in')
     } catch (error) {
@@ -79,10 +80,11 @@ const SideBar = () => {
       <button
         type='button'
         onClick={handleAdminLogout}
+        disabled={adminLoggingOut}
         className='mt-auto flex items-center justify-center md:justify-start gap-3 rounded-lg px-2 md:px-4 py-3 text-sm font-medium text-red-300 transition hover:bg-red-500/10 hover:text-red-200 cursor-pointer'
       >
         <LogOut size={18} />
-        <span className='hidden md:inline'>Admin Logout</span>
+        <span className='hidden md:inline'>{adminLoggingOut ? 'Logging out...' : 'Admin Logout'}</span>
       </button>
     </aside>
   )
