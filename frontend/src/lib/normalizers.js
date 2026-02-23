@@ -8,6 +8,27 @@ const toIsoDate = (value) => {
   return `${year}-${month}-${day}`;
 };
 
+const toLocalDateKey = (value) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getShowStartTime = (show) => {
+  if (show?.startsAt) {
+    const startsAt = new Date(show.startsAt)
+    if (!Number.isNaN(startsAt.getTime())) return startsAt
+  }
+
+  const baseDate = toIsoDate(show?.date)
+  if (!baseDate || !show?.time) return null
+  const fallback = new Date(`${baseDate}T${show.time}`)
+  return Number.isNaN(fallback.getTime()) ? null : fallback
+}
+
 export const normalizeMovie = (movie) => {
   if (!movie) return null;
 
@@ -38,14 +59,15 @@ export const normalizeShowDateMap = (shows) => {
   const now = Date.now();
 
   (shows || []).forEach((show) => {
-    const baseDate = toIsoDate(show.date);
-    if (!baseDate) return;
-    const parsed = new Date(`${baseDate}T${show.time}`);
-    if (Number.isNaN(parsed.getTime())) return;
-    if (parsed.getTime() < now) return;
+    const startTime = getShowStartTime(show)
+    if (!startTime) return
+    if (startTime.getTime() < now) return
+
+    const baseDate = toLocalDateKey(startTime)
+    if (!baseDate) return
 
     if (!grouped[baseDate]) grouped[baseDate] = [];
-    const dateTime = `${baseDate}T${show.time}`;
+    const dateTime = startTime.toISOString()
     grouped[baseDate].push({
       time: dateTime,
       showId: show._id,

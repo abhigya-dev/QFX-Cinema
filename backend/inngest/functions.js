@@ -10,6 +10,22 @@ import path from "path";
 import fs from "fs";
 import { getIO } from "../utils/socket.js";
 
+const getShowDateTime = (show) => {
+    if (show?.startsAt) {
+        const startsAt = new Date(show.startsAt);
+        if (!Number.isNaN(startsAt.getTime())) {
+            return startsAt;
+        }
+    }
+
+    const showDate = new Date(show.date);
+    const y = showDate.getUTCFullYear();
+    const m = String(showDate.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(showDate.getUTCDate()).padStart(2, "0");
+    const isoDate = `${y}-${m}-${d}`;
+    return new Date(`${isoDate}T${show.time}`);
+};
+
 // Function to send signup OTP email
 export const sendSignupOTP = inngest.createFunction(
     { id: "send-signup-otp" },
@@ -93,7 +109,7 @@ export const handleBookingConfirmed = inngest.createFunction(
         });
 
         // Schedule reminder 2 hours before show
-        const showTime = new Date(show.date);
+        const showTime = getShowDateTime(show);
         const reminderTime = new Date(showTime.getTime() - 2 * 60 * 60 * 1000);
 
         if (reminderTime > new Date()) {

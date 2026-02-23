@@ -4,6 +4,13 @@ import User from '../database/models/user.model.js';
 import { cleanupExpiredShows } from '../utils/showCleanup.js';
 
 const getShowDateTime = (show) => {
+    if (show?.startsAt) {
+        const startsAt = new Date(show.startsAt);
+        if (!Number.isNaN(startsAt.getTime())) {
+            return startsAt;
+        }
+    }
+
     const showDate = new Date(show.date);
     const y = showDate.getUTCFullYear();
     const m = String(showDate.getUTCMonth() + 1).padStart(2, '0');
@@ -17,7 +24,7 @@ const getShowDateTime = (show) => {
 // @access  Public
 export const getShowsByMovie = async (req, res) => {
     await cleanupExpiredShows();
-    const shows = await Show.find({ movieId: req.params.movieId }).sort({ date: 1, time: 1 });
+    const shows = await Show.find({ movieId: req.params.movieId }).sort({ startsAt: 1, date: 1, time: 1 });
     res.json(shows);
 };
 
@@ -25,8 +32,12 @@ export const getShowsByMovie = async (req, res) => {
 // @route   POST /api/shows
 // @access  Private/Admin
 export const createShow = async (req, res) => {
-    const { movieId, theatreId, date, time } = req.body;
-    const showDateTime = getShowDateTime({ date, time });
+    const { movieId, theatreId, date, time, startsAt } = req.body;
+    const showDateTime = startsAt ? new Date(startsAt) : getShowDateTime({ date, time });
+    if (Number.isNaN(showDateTime.getTime())) {
+        res.status(400);
+        throw new Error('Invalid show date/time');
+    }
     if (showDateTime <= new Date()) {
         res.status(400);
         throw new Error('Cannot create show in past date/time');
@@ -38,7 +49,7 @@ export const createShow = async (req, res) => {
         throw new Error('Show already exists for this movie, theatre, date and time');
     }
 
-    const show = new Show(req.body);
+    const show = new Show({ ...req.body, startsAt: showDateTime.toISOString() });
     const createdShow = await show.save();
     res.status(201).json(createdShow);
 };
@@ -85,7 +96,7 @@ export const getAdminShows = async (req, res) => {
 
     const shows = await Show.find({})
         .populate('movieId')
-        .sort({ date: -1, time: -1 })
+        .sort({ startsAt: -1, date: -1, time: -1 })
         .lean();
     const now = new Date();
     const activeShows = shows.filter((show) => getShowDateTime(show) >= now);

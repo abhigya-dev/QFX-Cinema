@@ -4,6 +4,13 @@ import Booking from '../database/models/booking.model.js';
 import { getIO } from './socket.js';
 
 const getShowDateTime = (show) => {
+    if (show?.startsAt) {
+        const startsAt = new Date(show.startsAt);
+        if (!Number.isNaN(startsAt.getTime())) {
+            return startsAt;
+        }
+    }
+
     const showDate = new Date(show.date);
     const y = showDate.getUTCFullYear();
     const m = String(showDate.getUTCMonth() + 1).padStart(2, '0');
@@ -14,7 +21,7 @@ const getShowDateTime = (show) => {
 
 export const cleanupExpiredShows = async () => {
     const now = new Date();
-    const shows = await Show.find({}).select('_id date time').lean();
+    const shows = await Show.find({}).select('_id startsAt date time').lean();
     const expiredShowIds = shows
         .filter((show) => getShowDateTime(show) < now)
         .map((show) => show._id);

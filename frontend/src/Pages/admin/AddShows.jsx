@@ -24,10 +24,28 @@ const toUtcDateKey = (value) => {
   const d = String(date.getUTCDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
 }
+const toLocalDateKey = (value) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+const getShowStartTime = (show) => {
+  if (show?.startsAt) {
+    const startsAt = new Date(show.startsAt)
+    if (!Number.isNaN(startsAt.getTime())) return startsAt
+  }
+
+  const showDate = toUtcDateKey(show?.date)
+  if (!showDate || !show?.time) return null
+  const parsed = new Date(`${showDate}T${show.time}`)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
 const isFutureShow = (show) => {
-  const showDate = toUtcDateKey(show.date)
-  const showDateTime = new Date(`${showDate}T${show.time}`)
-  return showDateTime.getTime() > Date.now()
+  const showDateTime = getShowStartTime(show)
+  return showDateTime ? showDateTime.getTime() > Date.now() : false
 }
 
 const AddShows = () => {
@@ -315,19 +333,26 @@ const AddShows = () => {
       const existingShows = (await api.get(`/shows/movie/${finalMovieId}`)).filter(isFutureShow)
       const existingShowSlots = new Set(
         (existingShows || []).map((show) => {
-          const showDate = toUtcDateKey(show.date)
-          return `${showDate}__${show.time}`
-        })
+          const showStart = getShowStartTime(show)
+          return showStart ? showStart.toISOString() : null
+        }).filter(Boolean)
       )
 
       let createdCount = 0
       let skippedCount = 0
 
       for (const showDateTimeObj of allDateTimes) {
+        const start = new Date(showDateTimeObj.time)
+        if (Number.isNaN(start.getTime())) {
+          skippedCount += 1
+          continue
+        }
+
+        const startsAt = start.toISOString()
         const [date = '', timePart = ''] = String(showDateTimeObj.time).split('T')
         const hhmm = timePart.slice(0, 5)
         const time = `${hhmm}:00`
-        const slotKey = `${date}__${time}`
+        const slotKey = startsAt
 
         if (existingShowSlots.has(slotKey)) {
           skippedCount += 1
@@ -339,6 +364,7 @@ const AddShows = () => {
           theatreId: 'QFX Main Hall',
           date,
           time,
+          startsAt,
           totalSeats: 90,
           price: Number(showPrice),
         })
@@ -524,8 +550,10 @@ const AddShows = () => {
           ) : (
             <div className='mt-3 flex flex-wrap gap-2'>
               {existingShows.map((show) => {
-                const showDate = toUtcDateKey(show.date)
-                const iso = `${showDate}T${show.time}`
+                const showStart = getShowStartTime(show)
+                if (!showStart) return null
+                const showDate = toLocalDateKey(showStart)
+                const iso = showStart.toISOString()
                 return (
                   <p key={show._id} className='rounded-md border border-gray-600 px-2 py-1 text-xs'>
                     {showDate} {formatShowTime(iso)}

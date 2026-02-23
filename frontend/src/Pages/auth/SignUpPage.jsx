@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react'
 import blurSvg from '../../assets/blur.svg'
 import toast from 'react-hot-toast'
@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { USE_DUMMY_DATA } from '../../lib/api'
 
 const SignUpPage = () => {
+  const OTP_PENDING_EMAIL_KEY = 'qfx_pending_signup_email'
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [otp, setOtp] = useState('')
@@ -18,6 +19,7 @@ const SignUpPage = () => {
 
   const { signup, googleLogin, verifySignupOtp, resendSignupOtp } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const {
     register,
     handleSubmit,
@@ -26,13 +28,36 @@ const SignUpPage = () => {
   } = useForm()
   const passwordValue = watch('password')
 
+  useEffect(() => {
+    const stateEmail = String(location.state?.email || '').trim().toLowerCase()
+    if (location.state?.otpStep && stateEmail) {
+      setPendingEmail(stateEmail)
+      setOtpStep(true)
+      return
+    }
+
+    const storedEmail = String(sessionStorage.getItem(OTP_PENDING_EMAIL_KEY) || '')
+      .trim()
+      .toLowerCase()
+    if (storedEmail) {
+      setPendingEmail(storedEmail)
+      setOtpStep(true)
+    }
+  }, [location.state])
+
   const onSubmit = async (values) => {
     const fullName = `${values.firstName} ${values.lastName}`.trim()
 
     try {
-      const payload = await signup(fullName, values.email, values.password)
-      setPendingEmail(values.email)
+      const normalizedEmail = String(values.email || '').trim().toLowerCase()
+      const payload = await signup(fullName, normalizedEmail, values.password)
+      setPendingEmail(normalizedEmail)
       setOtpStep(true)
+      sessionStorage.setItem(OTP_PENDING_EMAIL_KEY, normalizedEmail)
+      navigate('/auth/sign-up', {
+        replace: true,
+        state: { otpStep: true, email: normalizedEmail },
+      })
       toast.success(payload?.message || 'OTP sent to your email')
     } catch (error) {
       toast.error(error.message)
@@ -51,6 +76,7 @@ const SignUpPage = () => {
     try {
       setOtpSubmitting(true)
       await verifySignupOtp(pendingEmail, cleanOtp)
+      sessionStorage.removeItem(OTP_PENDING_EMAIL_KEY)
       toast.success('Account verified successfully')
       navigate('/')
     } catch (error) {
@@ -265,6 +291,7 @@ const SignUpPage = () => {
               setOtpStep(false)
               setOtp('')
               setPendingEmail('')
+              sessionStorage.removeItem(OTP_PENDING_EMAIL_KEY)
             }}
             className='mt-3 w-full text-sm text-gray-400 underline-offset-4 hover:underline'
           >

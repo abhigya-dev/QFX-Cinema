@@ -53,6 +53,14 @@ const sendResetPasswordEmail = async ({ id, name, email, resetUrl }) => {
     }
 };
 
+const fireAndForget = (promiseFactory, label) => {
+    Promise.resolve()
+        .then(() => promiseFactory())
+        .catch((error) => {
+            console.warn(`${label} failed:`, error.message);
+        });
+};
+
 const getAdminEmails = () =>
     new Set(
         (process.env.ADMIN_EMAILS || '')
@@ -110,12 +118,16 @@ export const signup = async (req, res) => {
         { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    await sendSignupOtpEmail({
-        id: pending._id,
-        name: pending.name,
-        email: pending.email,
-        otp,
-    });
+    fireAndForget(
+        () =>
+            sendSignupOtpEmail({
+                id: pending._id,
+                name: pending.name,
+                email: pending.email,
+                otp,
+            }),
+        'Signup OTP send'
+    );
 
     res.status(200).json({
         email: pending.email,
@@ -195,12 +207,16 @@ export const resendOTP = async (req, res) => {
     pending.otpExpire = new Date(Date.now() + 10 * 60 * 1000);
     await pending.save();
 
-    await sendSignupOtpEmail({
-        id: pending._id,
-        name: pending.name,
-        email: pending.email,
-        otp,
-    });
+    fireAndForget(
+        () =>
+            sendSignupOtpEmail({
+                id: pending._id,
+                name: pending.name,
+                email: pending.email,
+                otp,
+            }),
+        'Resend OTP send'
+    );
 
     res.status(200).json({ message: 'New OTP sent to email' });
 };

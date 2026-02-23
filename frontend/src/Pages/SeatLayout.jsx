@@ -42,6 +42,17 @@ const SeatLayout = () => {
     const day = String(dt.getUTCDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
   }
+  const getShowStartTime = (show) => {
+    if (show?.startsAt) {
+      const startsAt = new Date(show.startsAt)
+      if (!Number.isNaN(startsAt.getTime())) return startsAt
+    }
+
+    const showDate = toUtcDateKey(show?.date)
+    if (!showDate || !show?.time) return null
+    const parsedDateTime = new Date(`${showDate}T${show.time}`)
+    return Number.isNaN(parsedDateTime.getTime()) ? null : parsedDateTime
+  }
 
   const selectedShowIdRef = useRef(null)
   selectedShowIdRef.current = selectedShowId
@@ -96,14 +107,15 @@ const SeatLayout = () => {
         const now = Date.now()
         const filteredShows = (shows || [])
           .map((show) => {
-            const showDate = toUtcDateKey(show.date)
-            const parsedDateTime = new Date(`${showDate}T${show.time}`)
+            const parsedDateTime = getShowStartTime(show)
+            if (!parsedDateTime) return null
             return {
               showId: show._id,
-              time: `${showDate}T${show.time}`,
+              time: parsedDateTime.toISOString(),
               localDateKey: toLocalDateKey(parsedDateTime),
             }
           })
+          .filter(Boolean)
           .filter((show) => show.localDateKey === date)
           .filter((show) => new Date(show.time).getTime() >= now)
           .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
