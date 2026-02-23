@@ -4,6 +4,9 @@ import User from '../database/models/user.model.js';
 const CUSTOMER_COOKIE = 'jwt';
 const ADMIN_COOKIE = 'admin_jwt';
 
+const sendAuthError = (res, statusCode, message) =>
+    res.status(statusCode).json({ message });
+
 const resolveToken = (req, preferredCookie) => {
     let token;
 
@@ -39,11 +42,9 @@ const protect = async (req, res, next) => {
         await attachUserFromToken(req, res, token);
         next();
     } catch (error) {
-        if (!String(error?.message || '').toLowerCase().includes('no token')) {
-            console.error(error);
-        }
-        res.status(401);
-        throw new Error('Not authorized, token failed');
+        const status = res.statusCode >= 400 ? res.statusCode : 401;
+        const message = error?.message || 'Not authorized, token failed';
+        return sendAuthError(res, status, message);
     }
 };
 
@@ -57,13 +58,9 @@ const protectCustomer = async (req, res, next) => {
         }
         next();
     } catch (error) {
-        if (!String(error?.message || '').toLowerCase().includes('no token')) {
-            console.error(error);
-        }
-        if (!res.statusCode || res.statusCode < 400) {
-            res.status(401);
-        }
-        throw new Error(error.message || 'Not authorized, token failed');
+        const status = res.statusCode >= 400 ? res.statusCode : 401;
+        const message = error?.message || 'Not authorized, token failed';
+        return sendAuthError(res, status, message);
     }
 };
 
@@ -77,13 +74,9 @@ const protectAdmin = async (req, res, next) => {
         }
         next();
     } catch (error) {
-        if (!String(error?.message || '').toLowerCase().includes('no token')) {
-            console.error(error);
-        }
-        if (!res.statusCode || res.statusCode < 400) {
-            res.status(401);
-        }
-        throw new Error(error.message || 'Not authorized, token failed');
+        const status = res.statusCode >= 400 ? res.statusCode : 401;
+        const message = error?.message || 'Not authorized, token failed';
+        return sendAuthError(res, status, message);
     }
 };
 
