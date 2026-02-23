@@ -150,3 +150,58 @@ export const downloadMyBookingTicket = async (req, res) => {
         }
     });
 };
+
+// @desc    Remove a past booking from logged-in user's list
+// @route   DELETE /api/bookings/my/:bookingId
+// @access  Private
+export const deleteMyPastBooking = async (req, res) => {
+    const booking = await Booking.findById(req.params.bookingId)
+        .populate('showId')
+        .populate('seatIds');
+
+    if (!booking) {
+        res.status(404);
+        throw new Error('Booking not found');
+    }
+
+    if (String(booking.userId) !== String(req.user._id)) {
+        res.status(403);
+        throw new Error('Not authorized to delete this booking');
+    }
+
+    if (!booking.showId) {
+        res.status(400);
+        throw new Error('Booking show information is missing');
+    }
+
+    const showDateTime = new Date(`${toUtcDateKey(booking.showId.date)}T${booking.showId.time || '00:00:00'}`);
+    if (Number.isNaN(showDateTime.getTime())) {
+        res.status(400);
+        throw new Error('Invalid show date/time');
+    }
+
+    if (showDateTime.getTime() > Date.now()) {
+        res.status(400);
+        throw new Error('Cannot delete an upcoming booking');
+    }
+
+    if (booking.status === 'pending') {
+        await Seat.updateMany(
+            {
+                _id: { $in: (booking.seatIds || []).map((seat) => seat._id) },
+                status: 'reserved',
+                reservedBy: req.user._id,
+            },
+            {
+                status: 'available',
+                reservedBy: null,
+                reservedUntil: null,
+            }
+        );
+    }
+
+    booking.status = 'cancelled';
+    await booking.save();
+
+    res.json({ message: 'Past booking deleted successfully' });
+};

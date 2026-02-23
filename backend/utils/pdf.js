@@ -49,7 +49,6 @@ const drawField = (doc, label, value, x, y, width) => {
     .fontSize(11)
     .text(String(value || '-'), x, y + 12, {
       width,
-      lineBreak: false,
       ellipsis: true,
     });
 };
@@ -163,43 +162,49 @@ export const generateTicketPDF = async (booking, movie, show, user, outputPath) 
 
     // Main content split
     const contentY = ticketY + 184;
-    const leftW = ticketW - 210;
-    const rightX = ticketX + leftW + 26;
+    const rightPanelW = 168;
+    const contentGap = 18;
+    const leftPanelX = ticketX + 16;
+    const leftW = ticketW - rightPanelW - contentGap - 32;
+    const rightX = leftPanelX + leftW + contentGap;
 
-    doc.roundedRect(ticketX + 16, contentY, leftW - 10, 286, 10).fill('#F9FAFB');
-    doc.roundedRect(ticketX + 16, contentY, leftW - 10, 286, 10).lineWidth(1).strokeColor('#E5E7EB').stroke();
+    doc.roundedRect(leftPanelX, contentY, leftW, 286, 10).fill('#F9FAFB');
+    doc.roundedRect(leftPanelX, contentY, leftW, 286, 10).lineWidth(1).strokeColor('#E5E7EB').stroke();
 
-    drawField(doc, 'Theatre', show?.theatreId || 'QFX Main Hall', ticketX + 30, contentY + 18, 160);
-    drawField(doc, 'Show Date', showMeta.date, ticketX + 212, contentY + 18, 170);
-    drawField(doc, 'Show Time', showMeta.time, ticketX + 392, contentY + 18, 120);
+    const innerX = leftPanelX + 14;
+    const innerW = leftW - 28;
+    const fieldGap = 16;
+    const colW = (innerW - fieldGap) / 2;
+    const col2X = innerX + colW + fieldGap;
 
-    drawField(doc, 'Guest Name', user?.name || 'Guest', ticketX + 30, contentY + 72, 170);
-    drawField(doc, 'Email', user?.email || '-', ticketX + 212, contentY + 72, 300);
+    drawField(doc, 'Theatre', show?.theatreId || 'QFX Main Hall', innerX, contentY + 18, colW);
+    drawField(doc, 'Show Date', showMeta.date, col2X, contentY + 18, colW);
+    drawField(doc, 'Guest Name', user?.name || 'Guest', innerX, contentY + 78, colW);
+    drawParagraphField(doc, 'Email', user?.email || '-', col2X, contentY + 78, colW, 38);
+    drawParagraphField(doc, 'Seats', seatList, innerX, contentY + 142, innerW, 42);
+    drawField(doc, 'Show Time', showMeta.time, innerX, contentY + 204, colW);
+    drawField(doc, 'Tickets', String((booking?.seatIds || []).length || 0), col2X, contentY + 204, colW);
 
-    drawParagraphField(doc, 'Seats', seatList, ticketX + 30, contentY + 126, leftW - 50, 44);
-
-    doc.moveTo(ticketX + 30, contentY + 186).lineTo(ticketX + leftW - 10, contentY + 186).lineWidth(1).strokeColor('#E5E7EB').stroke();
-
-    drawField(doc, 'Amount Paid', formatMoney(booking?.totalAmount), ticketX + 30, contentY + 202, 180);
-    drawField(doc, 'Tickets', String((booking?.seatIds || []).length || 0), ticketX + 212, contentY + 202, 140);
-    drawField(doc, 'Status', String(booking?.status || 'confirmed').toUpperCase(), ticketX + 392, contentY + 202, 120);
+    doc.moveTo(innerX, contentY + 252).lineTo(innerX + innerW, contentY + 252).lineWidth(1).strokeColor('#E5E7EB').stroke();
+    drawField(doc, 'Amount Paid', formatMoney(booking?.totalAmount), innerX, contentY + 258, colW);
+    drawField(doc, 'Status', String(booking?.status || 'confirmed').toUpperCase(), col2X, contentY + 258, colW);
 
     // QR panel
-    doc.roundedRect(rightX - 8, contentY, 168, 286, 10).fill('#FFFFFF');
-    doc.roundedRect(rightX - 8, contentY, 168, 286, 10).lineWidth(1).strokeColor('#E5E7EB').stroke();
+    doc.roundedRect(rightX, contentY, rightPanelW, 286, 10).fill('#FFFFFF');
+    doc.roundedRect(rightX, contentY, rightPanelW, 286, 10).lineWidth(1).strokeColor('#E5E7EB').stroke();
 
-    doc.fillColor('#111827').font('Helvetica-Bold').fontSize(11).text('ENTRY QR', rightX + 42, contentY + 14);
-    doc.fillColor('#6B7280').font('Helvetica').fontSize(8).text('Scan at theatre gate', rightX + 27, contentY + 30);
+    doc.fillColor('#111827').font('Helvetica-Bold').fontSize(11).text('ENTRY QR', rightX + 49, contentY + 14);
+    doc.fillColor('#6B7280').font('Helvetica').fontSize(8).text('Scan at theatre gate', rightX + 34, contentY + 30);
 
     if (qrImageBuffer) {
-      doc.image(qrImageBuffer, rightX + 8, contentY + 48, { fit: [136, 136], align: 'center' });
+      doc.image(qrImageBuffer, rightX + 16, contentY + 48, { fit: [136, 136], align: 'center' });
     } else {
-      doc.rect(rightX + 8, contentY + 48, 136, 136).fill('#F3F4F6');
-      doc.fillColor('#374151').font('Helvetica-Bold').fontSize(9).text('QR unavailable', rightX + 36, contentY + 110);
+      doc.rect(rightX + 16, contentY + 48, 136, 136).fill('#F3F4F6');
+      doc.fillColor('#374151').font('Helvetica-Bold').fontSize(9).text('QR unavailable', rightX + 44, contentY + 110);
     }
 
-    doc.fillColor('#6B7280').font('Helvetica').fontSize(8).text(`Ref: ${String(booking?._id || '').slice(-10)}`, rightX + 10, contentY + 196, {
-      width: 132,
+    doc.fillColor('#6B7280').font('Helvetica').fontSize(8).text(`Ref: ${String(booking?._id || '').slice(-10)}`, rightX + 16, contentY + 196, {
+      width: 136,
       align: 'center',
     });
 

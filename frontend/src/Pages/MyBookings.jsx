@@ -12,6 +12,7 @@ const MyBookings = () => {
   const [error, setError] = useState('')
   const [payingBookingId, setPayingBookingId] = useState(null)
   const [downloadingBookingId, setDownloadingBookingId] = useState(null)
+  const [deletingBookingId, setDeletingBookingId] = useState(null)
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -90,6 +91,25 @@ const MyBookings = () => {
     }
   }
 
+  const isPastBooking = (booking) => {
+    const showDateTime = booking?.show?.showDateTime
+    if (!showDateTime) return false
+    return new Date(showDateTime).getTime() <= Date.now()
+  }
+
+  const handleDeletePastBooking = async (bookingId) => {
+    try {
+      setDeletingBookingId(bookingId)
+      const payload = await api.delete(`/bookings/my/${bookingId}`)
+      setBookings((prev) => prev.filter((booking) => booking._id !== bookingId))
+      toast.success(payload?.message || 'Booking deleted')
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setDeletingBookingId(null)
+    }
+  }
+
   return (
     <div className='px-6 py-24 lg:px-24'>
       <h1 className='text-2xl font-bold mb-6'>My Bookings</h1>
@@ -133,6 +153,15 @@ const MyBookings = () => {
                   disabled={downloadingBookingId === booking._id}
                 >
                   {downloadingBookingId === booking._id ? 'Downloading...' : 'Download Ticket PDF'}
+                </button>
+              )}
+              {isPastBooking(booking) && (
+                <button
+                  className='mt-3 ml-2 bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-md text-sm disabled:opacity-60 disabled:cursor-not-allowed'
+                  onClick={() => handleDeletePastBooking(booking._id)}
+                  disabled={deletingBookingId === booking._id}
+                >
+                  {deletingBookingId === booking._id ? 'Deleting...' : 'Delete'}
                 </button>
               )}
             </div>
