@@ -47,7 +47,9 @@ const MovieCard = ({ movieDetail, compact = false, home = false }) => {
                 {(movieDetail.vote_average || 0).toFixed(1)}
               </p>
               {movieDetail.showPrice !== null && (
-                <p className='text-xs text-gray-300'>From ${Number(movieDetail.showPrice).toFixed(0)}</p>
+                <p className='mt-1 inline-flex rounded-full bg-primary-dull/20 px-2 py-0.5 text-xs font-semibold text-primary-dull'>
+                  Ticket ${Number(movieDetail.showPrice).toFixed(2)}
+                </p>
               )}
             </div>
           </div>
@@ -62,7 +64,7 @@ const MovieCard = ({ movieDetail, compact = false, home = false }) => {
                   <img
                     src={imageSrc}
                     alt=""
-                    className={`rounded-md w-full object-cover ${home ? 'h-48' : ''}`}
+                    className={`rounded-md w-full object-cover ${home ? 'h-40 sm:h-44 md:h-46 lg:h-48' : 'h-44 sm:h-48 md:h-52 lg:h-56'}`}
                     onClick={handleBuyTicket}
                   />
                   {home && (
@@ -86,7 +88,9 @@ const MovieCard = ({ movieDetail, compact = false, home = false }) => {
                  <div className='text-right'>
                    <p className='flex gap-2 items-center justify-end'><Star size={18} color='#D63858' fill='#D63858'/>{(movieDetail.vote_average || 0).toFixed(1) }</p>
                    {movieDetail.showPrice !== null && (
-                     <p className='text-xs text-gray-300'>From ${Number(movieDetail.showPrice).toFixed(0)}</p>
+                     <p className='mt-1 inline-flex rounded-full bg-primary-dull/20 px-2 py-0.5 text-xs font-semibold text-primary-dull'>
+                       Ticket ${Number(movieDetail.showPrice).toFixed(2)}
+                     </p>
                    )}
                  </div>
                 </div>

@@ -36,7 +36,7 @@ const Navbar = () => {
 
   return (
     <header className='fixed left-0 top-0 z-50 w-full bg-transparent'>
-      <div className='flex items-center justify-between px-3 py-3 sm:px-5 sm:py-4 md:px-10 lg:px-18'>
+      <div className='flex items-center justify-between border-b border-white/15 bg-white/10 px-3 py-3 backdrop-blur-xl sm:px-5 sm:py-4 md:px-10 lg:border-0 lg:bg-transparent lg:backdrop-blur-0 lg:px-18'>
         <Link to='/' className='shrink-0'>
           <img src={assets.logo} alt='logo' className='w-32 sm:w-40 md:w-48 lg:w-56' />
         </Link>
@@ -121,7 +121,7 @@ const Navbar = () => {
       </div>
 
       {menuOpen && (
-        <div className='flex flex-col space-y-4 border-t border-white/20 bg-black/60 px-6 py-6 backdrop-blur-md md:hidden'>
+        <div className='flex flex-col space-y-4 border-t border-white/20 bg-white/10 px-6 py-6 backdrop-blur-xl md:hidden'>
           <Link onClick={() => setMenuOpen(false)} to='/'>Home</Link>
           <Link onClick={() => setMenuOpen(false)} to='/movies'>Movie</Link>
           <Link onClick={() => setMenuOpen(false)} to='/movies'>Theaters</Link>
