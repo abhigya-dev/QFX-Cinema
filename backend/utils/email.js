@@ -12,36 +12,34 @@ const hasEmailConfig = () =>
 
 const isIPv4 = (value) => /^\d{1,3}(\.\d{1,3}){3}$/.test(String(value || ''));
 
-const resolveSmtpHost = async () => {
+const resolveSmtpHosts = async () => {
     const configuredHost = String(process.env.EMAIL_HOST || '').trim();
     const family = Number(process.env.EMAIL_IP_FAMILY || 4);
     const forceIPv4 = String(process.env.EMAIL_FORCE_IPV4 || 'true').toLowerCase() === 'true';
     const explicitHostIp = String(process.env.EMAIL_HOST_IP || '').trim();
 
     if (explicitHostIp) {
-        return { host: explicitHostIp, servername: configuredHost || explicitHostIp };
+        return [{ host: explicitHostIp, servername: configuredHost || explicitHostIp }];
     }
 
     if (!configuredHost || !forceIPv4 || family !== 4 || isIPv4(configuredHost)) {
-        return { host: configuredHost, servername: configuredHost };
+        return [{ host: configuredHost, servername: configuredHost }];
     }
 
     try {
         const addresses = await dns.resolve4(configuredHost);
         if (addresses?.length) {
-            return { host: addresses[0], servername: configuredHost };
+            return addresses.map((ip) => ({ host: ip, servername: configuredHost }));
         }
     } catch (error) {
         console.warn(`Could not resolve IPv4 for ${configuredHost}:`, error.message);
     }
 
-    return { host: configuredHost, servername: configuredHost };
+    return [{ host: configuredHost, servername: configuredHost }];
 };
 
-const createTransporter = async () => {
-    const { host, servername } = await resolveSmtpHost();
-
-    return nodemailer.createTransport({
+const createTransporter = ({ host, servername }) =>
+    nodemailer.createTransport({
         host,
         port: Number(process.env.EMAIL_PORT || 587),
         secure: String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true' || Number(process.env.EMAIL_PORT) === 465,
@@ -57,7 +55,6 @@ const createTransporter = async () => {
             servername,
         },
     });
-};
 
 export const isEmailConfigured = () => hasEmailConfig();
 
@@ -75,10 +72,22 @@ export const sendEmail = async ({ to, subject, html, attachments = [] }) => {
     };
 
     try {
-        const transporter = await createTransporter();
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
-        return info;
+        const smtpTargets = await resolveSmtpHosts();
+        let lastError = null;
+
+        for (const target of smtpTargets) {
+            try {
+                const transporter = createTransporter(target);
+                const info = await transporter.sendMail(mailOptions);
+                console.log(`Email sent via ${target.host}: ${info.response}`);
+                return info;
+            } catch (error) {
+                lastError = error;
+                console.warn(`SMTP send failed via ${target.host}:`, error.message);
+            }
+        }
+
+        throw lastError || new Error('No SMTP target could send email');
     } catch (error) {
         console.error('Error sending email:', error);
         throw new Error('Email could not be sent');
