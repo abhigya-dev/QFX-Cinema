@@ -377,9 +377,9 @@ const SeatLayout = () => {
       {(loadingShows || loadingSeats) && <Loader />}
       <div key={date} className='relative mt-16 flex flex-col overflow-x-hidden px-3 py-6 pb-20 sm:px-6 lg:flex-row lg:px-10 lg:py-10'>
         {secondsLeft > 0 && (
-          <div className='fixed left-1/2 top-20 z-50 w-[92vw] max-w-md -translate-x-1/2 rounded-full border border-white/20 bg-primary-dull px-4 py-2 text-white shadow-lg'>
-            <p className='text-center text-xs font-semibold sm:text-sm'>
-              Booking session ends in {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+          <div className='fixed right-3 top-[72px] z-50 rounded-md border border-white/20 bg-primary-dull px-3 py-1.5 text-white shadow-lg lg:hidden'>
+            <p className='text-xs font-semibold'>
+              {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
             </p>
           </div>
         )}
@@ -392,6 +392,13 @@ const SeatLayout = () => {
 
         <div className='z-30 w-full lg:w-auto'>
           <div className='mb-6 rounded-lg border border-primary-dull/40 bg-primary-dull/20 py-3 sm:mb-8 sm:py-4 lg:sticky lg:top-10 lg:mb-15 lg:w-50 lg:py-10'>
+            {secondsLeft > 0 && (
+              <div className='mx-4 mb-4 hidden rounded-md border border-white/20 bg-primary-dull px-3 py-2 text-white lg:block'>
+                <p className='text-xs font-semibold'>
+                  Booking session ends in {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+                </p>
+              </div>
+            )}
             <p className='px-4 text-sm font-bold sm:px-6 sm:text-base'>Available Timings</p>
 
             <div className='mt-3 flex gap-2 overflow-x-auto px-3 pb-1 lg:mt-0 lg:flex-col lg:items-start lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0'>
@@ -436,16 +443,18 @@ const SeatLayout = () => {
             </div>
           </div>
 
-          <div className='mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 px-1 sm:gap-6 sm:px-0 md:grid-cols-2 md:gap-8 lg:gap-11'>
-            {groupRows.slice(1).map((rows, index) => (
-              <div key={index} className='flex flex-col gap-3 overflow-x-auto'>
-                {rows.map((row) => (
-                  <div key={row}>
-                    {createRow(row)}
-                  </div>
-                ))}
-              </div>
-            ))}
+          <div className='w-full overflow-x-auto'>
+            <div className='mx-auto grid min-w-[640px] max-w-4xl grid-cols-2 gap-4 px-1 sm:gap-6 sm:px-0 lg:gap-11'>
+              {groupRows.slice(1).map((rows, index) => (
+                <div key={index} className='flex flex-col gap-3'>
+                  {rows.map((row) => (
+                    <div key={row}>
+                      {createRow(row)}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
           <div className='mt-3 flex w-full items-center justify-center gap-3 self-center sm:mt-5'>
             <button
