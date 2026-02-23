@@ -12,8 +12,10 @@ const ADMIN_COOKIE = 'admin_jwt';
 const safeInngestSend = async (payload) => {
     try {
         await inngest.send(payload);
+        return true;
     } catch (error) {
         console.warn('Inngest event send failed:', error.message);
+        return false;
     }
 };
 
@@ -24,9 +26,10 @@ const sendSignupOtpEmail = async ({ id, name, email, otp }) => {
             subject: 'Verify your email - QFX Cinemas',
             html: getOTPTemplate(name, otp),
         });
+        return true;
     } catch (directEmailError) {
         // Fallback to Inngest pipeline if direct SMTP call fails
-        await safeInngestSend({
+        return await safeInngestSend({
             name: 'auth/signup',
             data: {
                 user: { id, name, email, otp },
@@ -42,8 +45,9 @@ const sendResetPasswordEmail = async ({ id, name, email, resetUrl }) => {
             subject: 'Reset your password - QFX Cinemas',
             html: getResetPasswordTemplate(name, resetUrl),
         });
+        return true;
     } catch (directEmailError) {
-        await safeInngestSend({
+        return await safeInngestSend({
             name: 'auth/forgot-password',
             data: {
                 user: { id, name, email },
@@ -51,14 +55,6 @@ const sendResetPasswordEmail = async ({ id, name, email, resetUrl }) => {
             },
         });
     }
-};
-
-const fireAndForget = (promiseFactory, label) => {
-    Promise.resolve()
-        .then(() => promiseFactory())
-        .catch((error) => {
-            console.warn(`${label} failed:`, error.message);
-        });
 };
 
 const getAdminEmails = () =>
@@ -122,16 +118,17 @@ export const signup = async (req, res) => {
         { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    fireAndForget(
-        () =>
-            sendSignupOtpEmail({
-                id: pending._id,
-                name: pending.name,
-                email: pending.email,
-                otp,
-            }),
-        'Signup OTP send'
-    );
+    const queued = await sendSignupOtpEmail({
+        id: pending._id,
+        name: pending.name,
+        email: pending.email,
+        otp,
+    });
+
+    if (!queued) {
+        res.status(503);
+        throw new Error('Could not send OTP email right now. Please try again shortly.');
+    }
 
     res.status(200).json({
         email: pending.email,
@@ -215,16 +212,17 @@ export const resendOTP = async (req, res) => {
     pending.otpExpire = new Date(Date.now() + 10 * 60 * 1000);
     await pending.save();
 
-    fireAndForget(
-        () =>
-            sendSignupOtpEmail({
-                id: pending._id,
-                name: pending.name,
-                email: pending.email,
-                otp,
-            }),
-        'Resend OTP send'
-    );
+    const queued = await sendSignupOtpEmail({
+        id: pending._id,
+        name: pending.name,
+        email: pending.email,
+        otp,
+    });
+
+    if (!queued) {
+        res.status(503);
+        throw new Error('Could not resend OTP email right now. Please try again shortly.');
+    }
 
     res.status(200).json({ message: 'New OTP sent to email' });
 };
@@ -463,12 +461,17 @@ export const forgotPassword = async (req, res) => {
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    await sendResetPasswordEmail({
+    const queued = await sendResetPasswordEmail({
         id: user._id,
         name: user.name,
         email: user.email,
         resetUrl,
     });
+
+    if (!queued) {
+        res.status(503);
+        throw new Error('Could not send reset email right now. Please try again shortly.');
+    }
 
     res.status(200).json({ message: 'Password reset link sent to email' });
 };
