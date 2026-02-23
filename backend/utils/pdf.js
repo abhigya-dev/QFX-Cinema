@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import QRCode from 'qrcode';
 
+const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Kathmandu';
+
 const toUtcDateKey = (value) => {
   const date = new Date(value);
   const y = date.getUTCFullYear();
@@ -12,6 +14,17 @@ const toUtcDateKey = (value) => {
 };
 
 const formatMoney = (amount) => `$${Number(amount || 0).toFixed(2)}`;
+
+const formatDateTimeInAppTimezone = (dateValue) =>
+  new Date(dateValue).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: APP_TIMEZONE,
+  });
 
 const formatDateTime = (show) => {
   const dateKey = toUtcDateKey(show?.date);
@@ -89,14 +102,7 @@ export const generateTicketPDF = async (booking, movie, show, user, outputPath) 
     .filter(Boolean)
     .join(', ') || 'N/A';
 
-  const issuedAt = new Date().toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const issuedAt = formatDateTimeInAppTimezone(new Date());
 
   const showMeta = formatDateTime(show);
 
