@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import dns from 'dns/promises';
+import fs from 'fs/promises';
 
 const hasEmailConfig = () =>
     Boolean(
@@ -7,6 +8,12 @@ const hasEmailConfig = () =>
         process.env.EMAIL_PORT &&
         process.env.EMAIL_USER &&
         process.env.EMAIL_PASS &&
+        process.env.EMAIL_FROM
+    );
+
+const hasResendConfig = () =>
+    Boolean(
+        process.env.RESEND_API_KEY &&
         process.env.EMAIL_FROM
     );
 
@@ -56,11 +63,63 @@ const createTransporter = ({ host, servername }) =>
         },
     });
 
-export const isEmailConfigured = () => hasEmailConfig();
+export const isEmailConfigured = () => hasResendConfig() || hasEmailConfig();
+
+const toResendAttachments = async (attachments = []) => {
+    const items = [];
+
+    for (const attachment of attachments) {
+        const filename = attachment?.filename || 'attachment';
+        if (attachment?.content) {
+            const content = Buffer.isBuffer(attachment.content)
+                ? attachment.content.toString('base64')
+                : Buffer.from(String(attachment.content)).toString('base64');
+            items.push({ filename, content });
+            continue;
+        }
+
+        if (attachment?.path) {
+            const file = await fs.readFile(attachment.path);
+            items.push({ filename, content: file.toString('base64') });
+        }
+    }
+
+    return items;
+};
+
+const sendWithResend = async ({ to, subject, html, attachments = [] }) => {
+    const payload = {
+        from: process.env.EMAIL_FROM,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+    };
+
+    const resendAttachments = await toResendAttachments(attachments);
+    if (resendAttachments.length > 0) {
+        payload.attachments = resendAttachments;
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const body = await response.text();
+    if (!response.ok) {
+        throw new Error(`Resend API error (${response.status}): ${body}`);
+    }
+
+    return body;
+};
 
 export const sendEmail = async ({ to, subject, html, attachments = [] }) => {
-    if (!hasEmailConfig()) {
-        throw new Error('Email service is not configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS and EMAIL_FROM.');
+    if (!hasResendConfig() && !hasEmailConfig()) {
+        throw new Error('Email service is not configured. Use RESEND_API_KEY + EMAIL_FROM, or SMTP EMAIL_* settings.');
     }
 
     const mailOptions = {
@@ -72,6 +131,12 @@ export const sendEmail = async ({ to, subject, html, attachments = [] }) => {
     };
 
     try {
+        if (hasResendConfig()) {
+            const result = await sendWithResend({ to, subject, html, attachments });
+            console.log(`Email sent via Resend: ${result}`);
+            return result;
+        }
+
         const smtpTargets = await resolveSmtpHosts();
         let lastError = null;
 
