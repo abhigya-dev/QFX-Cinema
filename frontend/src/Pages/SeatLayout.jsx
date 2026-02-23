@@ -308,7 +308,7 @@ const SeatLayout = () => {
     const rowSeats = seatsByRow[row] || []
 
     return (
-      <div className='grid grid-cols-9 gap-2'>
+      <div className='grid min-w-[300px] grid-cols-9 gap-1.5 sm:min-w-[360px] sm:gap-2'>
         {rowSeats.map((seat) => {
           const isSelected = selectedSeat.includes(seat._id)
           const isOwnedReserved =
@@ -322,8 +322,8 @@ const SeatLayout = () => {
               className={`${isSelected || isOwnedReserved ? 'bg-primary-dull' : 'bg-primary-dull/15'}
                 aspect-square
                 w-full
-                text-xs
-                sm:text-sm
+                text-[10px]
+                sm:text-xs
                 rounded-sm
                 border border-primary-dull/30
                 text-white
@@ -375,7 +375,7 @@ const SeatLayout = () => {
   return (
     <>
       {(loadingShows || loadingSeats) && <Loader />}
-      <div key={date} className='relative mt-16 flex flex-col overflow-x-hidden px-4 py-8 pb-20 sm:px-6 lg:flex-row lg:px-10 lg:py-10'>
+      <div key={date} className='relative mt-16 flex flex-col overflow-x-hidden px-3 py-6 pb-20 sm:px-6 lg:flex-row lg:px-10 lg:py-10'>
         {secondsLeft > 0 && (
           <div className='fixed left-1/2 top-20 z-50 w-[92vw] max-w-md -translate-x-1/2 rounded-full border border-white/20 bg-primary-dull px-4 py-2 text-white shadow-lg'>
             <p className='text-center text-xs font-semibold sm:text-sm'>
@@ -391,14 +391,14 @@ const SeatLayout = () => {
         />
 
         <div className='z-30 w-full lg:w-auto'>
-          <div className='mb-8 rounded-lg border border-primary-dull/40 bg-primary-dull/20 py-4 lg:sticky lg:top-10 lg:mb-15 lg:w-50 lg:py-10'>
+          <div className='mb-6 rounded-lg border border-primary-dull/40 bg-primary-dull/20 py-3 sm:mb-8 sm:py-4 lg:sticky lg:top-10 lg:mb-15 lg:w-50 lg:py-10'>
             <p className='px-4 text-sm font-bold sm:px-6 sm:text-base'>Available Timings</p>
 
             <div className='mt-3 flex gap-2 overflow-x-auto px-3 pb-1 lg:mt-0 lg:flex-col lg:items-start lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0'>
               {showTimes.map((show) => (
                 <button
                   key={show.showId}
-                  className={`flex shrink-0 items-center gap-2 rounded-md px-4 py-2 text-sm transition cursor-pointer lg:w-full lg:rounded-r-md lg:rounded-l-none lg:px-7
+                  className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs transition cursor-pointer sm:px-4 sm:text-sm lg:w-full lg:rounded-r-md lg:rounded-l-none lg:px-7
                     ${selectedShowId !== show.showId ? 'hover:bg-primary-dull/15' : ''}
                     ${selectedShowId === show.showId ? 'bg-primary-dull' : ''}
                   `}
@@ -426,8 +426,8 @@ const SeatLayout = () => {
             <p className='text-xs text-gray-300'>SCREEN SIDE</p>
           </div>
 
-          <div className='mt-8 flex justify-center sm:mt-12 lg:mt-20'>
-            <div className='grid w-full max-w-104 grid-cols-1 gap-3'>
+          <div className='mt-6 flex justify-center overflow-x-auto px-1 sm:mt-12 lg:mt-20'>
+            <div className='grid w-full min-w-[300px] max-w-104 grid-cols-1 gap-3'>
               {groupRows[0].map((row) => (
                 <div key={row}>
                   {createRow(row)}
@@ -436,9 +436,9 @@ const SeatLayout = () => {
             </div>
           </div>
 
-          <div className='mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-11'>
+          <div className='mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 px-1 sm:gap-6 sm:px-0 md:grid-cols-2 md:gap-8 lg:gap-11'>
             {groupRows.slice(1).map((rows, index) => (
-              <div key={index} className='flex flex-col gap-3'>
+              <div key={index} className='flex flex-col gap-3 overflow-x-auto'>
                 {rows.map((row) => (
                   <div key={row}>
                     {createRow(row)}
@@ -447,9 +447,9 @@ const SeatLayout = () => {
               </div>
             ))}
           </div>
-          <div className='mt-3 flex items-center gap-3 self-center sm:mt-5'>
+          <div className='mt-3 flex w-full items-center justify-center gap-3 self-center sm:mt-5'>
             <button
-              className='flex items-center gap-3 rounded-lg bg-primary-dull px-4 py-2 text-sm font-semibold sm:px-5 disabled:cursor-not-allowed disabled:opacity-60'
+              className='flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-primary-dull px-4 py-2 text-sm font-semibold sm:w-auto sm:max-w-none sm:gap-3 sm:px-5 disabled:cursor-not-allowed disabled:opacity-60'
               onClick={handleCheckout}
               disabled={checkingOut || selectedSeat.length === 0}
             >

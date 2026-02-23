@@ -36,9 +36,9 @@ const Navbar = () => {
 
   return (
     <header className='fixed left-0 top-0 z-50 w-full bg-transparent'>
-      <div className='flex items-center justify-between px-6 py-5 md:px-18'>
-        <Link to='/'>
-          <img src={assets.logo} alt='logo' className='w-50 md:w-60' />
+      <div className='flex items-center justify-between px-3 py-3 sm:px-5 sm:py-4 md:px-10 lg:px-18'>
+        <Link to='/' className='shrink-0'>
+          <img src={assets.logo} alt='logo' className='w-28 sm:w-36 md:w-44 lg:w-56' />
         </Link>
 
         <div className='hidden gap-8 rounded-full border border-white/20 bg-white/10 px-6 py-3 shadow-lg backdrop-blur-md lg:flex'>
@@ -50,12 +50,12 @@ const Navbar = () => {
           {isClientAuthenticated && <Link to='/mybookings'>My Bookings</Link>}
         </div>
 
-        <div className='flex items-center justify-center gap-5 max-md:px-4'>
+        <div className='flex items-center justify-center gap-2 sm:gap-3 md:gap-5'>
           <Search className='hidden lg:block' />
 
           {!isClientAuthenticated && (
             <button
-              className='cursor-pointer rounded-full bg-primary-dull px-4 py-2 text-white md:px-6'
+              className='cursor-pointer rounded-full bg-primary-dull px-3 py-1.5 text-sm text-white sm:px-4 sm:py-2 md:px-6'
               onClick={() => navigate('/auth/sign-in')}
             >
               Login
@@ -65,7 +65,7 @@ const Navbar = () => {
           {isClientAuthenticated && (
             <div className='relative' ref={dropdownRef}>
               <button
-                className='flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm backdrop-blur-md'
+                className='flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 py-1.5 text-sm backdrop-blur-md sm:gap-2 sm:px-3 sm:py-2'
                 onClick={() => setProfileMenuOpen((prev) => !prev)}
               >
                 <img
@@ -73,8 +73,8 @@ const Navbar = () => {
                   alt='profile'
                   className='h-7 w-7 rounded-full object-cover border border-white/20'
                 />
-                <p className='max-w-32 truncate'>Hi, {user?.name || 'User'}</p>
-                <ChevronDown size={16} />
+                <p className='hidden max-w-24 truncate sm:block md:max-w-32'>Hi, {user?.name || 'User'}</p>
+                <ChevronDown size={15} />
               </button>
 
               {profileMenuOpen && (
