@@ -177,7 +177,7 @@ export const verifyEmail = async (req, res) => {
 
     await PendingSignup.deleteOne({ _id: pending._id });
 
-    generateToken(res, user._id, { cookieName: CUSTOMER_COOKIE });
+    const token = generateToken(res, user._id, { cookieName: CUSTOMER_COOKIE });
     res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -185,6 +185,7 @@ export const verifyEmail = async (req, res) => {
         isVerified: user.isVerified,
         isAdmin: user.isAdmin,
         imageUrl: user.imageUrl || '',
+        token,
         message: 'Email verified and account created successfully',
     });
 };
@@ -280,7 +281,7 @@ export const signin = async (req, res) => {
             res.status(403);
             throw new Error('Admin account must use admin login route');
         }
-        generateToken(res, user._id, { cookieName: CUSTOMER_COOKIE });
+        const token = generateToken(res, user._id, { cookieName: CUSTOMER_COOKIE });
         res.json({
             _id: user._id,
             name: user.name,
@@ -288,6 +289,7 @@ export const signin = async (req, res) => {
             isVerified: user.isVerified,
             isAdmin: user.isAdmin,
             imageUrl: user.imageUrl || '',
+            token,
         });
     } else {
         res.status(401);

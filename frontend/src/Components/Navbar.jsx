@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import { ChevronDown, Menu, Search, Settings, Ticket, X, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +9,7 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, isClientAuthenticated, logout, loggingOut } = useAuth()
   const dropdownRef = useRef(null)
 
@@ -56,7 +57,11 @@ const Navbar = () => {
           {!isClientAuthenticated && (
             <button
               className='cursor-pointer rounded-full bg-primary-dull px-3 py-1.5 text-sm text-white sm:px-4 sm:py-2 md:px-6'
-              onClick={() => navigate('/auth/sign-in')}
+              onClick={() =>
+                navigate('/auth/sign-in', {
+                  state: { redirectTo: `${location.pathname}${location.search}${location.hash}` },
+                })
+              }
             >
               Login
             </button>

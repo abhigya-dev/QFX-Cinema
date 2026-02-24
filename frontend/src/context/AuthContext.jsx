@@ -45,6 +45,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const payload = await api.post('/auth/signin', { email, password });
+    if (payload?.token) {
+      window.localStorage.setItem(CUSTOMER_TOKEN_KEY, payload.token);
+    }
     setUser(payload);
     return payload;
   };
@@ -65,6 +68,9 @@ export const AuthProvider = ({ children }) => {
 
   const verifySignupOtp = async (email, otp) => {
     const payload = await api.post('/auth/verify-email', { email, otp });
+    if (payload?.token) {
+      window.localStorage.setItem(CUSTOMER_TOKEN_KEY, payload.token);
+    }
     setUser(payload);
     return payload;
   };
