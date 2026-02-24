@@ -33,6 +33,10 @@ function App() {
   const isAuthRoute = pathname.startsWith("/auth")
 
   useEffect(() => {
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur()
+    }
     window.scrollTo(0, 0)
   }, [pathname])
 

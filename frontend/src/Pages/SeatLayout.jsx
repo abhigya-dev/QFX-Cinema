@@ -26,8 +26,10 @@ const SeatLayout = () => {
   const [checkingOut, setCheckingOut] = useState(false)
   const [reservationEndsAt, setReservationEndsAt] = useState(null)
   const [secondsLeft, setSecondsLeft] = useState(0)
+  const [seatScrollState, setSeatScrollState] = useState({ canScrollLeft: false, canScrollRight: false })
   const groupRows = [['A', 'B'], ['C', 'D'], ['E', 'F'], ['G', 'H'], ['I', 'J']]
   const redirectPath = `/movies/${movieId}/${date}`
+  const seatRowsScrollRef = useRef(null)
 
   const toLocalDateKey = (value) => {
     const dt = new Date(value)
@@ -214,6 +216,26 @@ const SeatLayout = () => {
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
   }, [reservationEndsAt])
+
+  useEffect(() => {
+    const container = seatRowsScrollRef.current
+    if (!container) return
+
+    const updateScrollState = () => {
+      const canScrollLeft = container.scrollLeft > 4
+      const canScrollRight = container.scrollLeft + container.clientWidth < container.scrollWidth - 4
+      setSeatScrollState({ canScrollLeft, canScrollRight })
+    }
+
+    updateScrollState()
+    container.addEventListener('scroll', updateScrollState, { passive: true })
+    window.addEventListener('resize', updateScrollState)
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState)
+      window.removeEventListener('resize', updateScrollState)
+    }
+  }, [seats.length, selectedShowId])
 
   const seatsByRow = useMemo(() => {
     const grouped = {}
@@ -444,17 +466,32 @@ const SeatLayout = () => {
             </div>
           </div>
 
-          <div className='w-full overflow-x-auto'>
-            <div className='mx-auto grid min-w-[760px] max-w-4xl grid-cols-2 gap-11 px-1 sm:px-0'>
-              {groupRows.slice(1).map((rows, index) => (
-                <div key={index} className='flex flex-col gap-3'>
-                  {rows.map((row) => (
-                    <div key={row}>
-                      {createRow(row)}
+          <div className='w-full'>
+            <div className='mb-2 flex items-center justify-center lg:hidden'>
+              {seatScrollState.canScrollRight && (
+                <p className='text-xs text-gray-300'>Swipe left to see more seats</p>
+              )}
+            </div>
+            <div className='relative'>
+              {seatScrollState.canScrollLeft && (
+                <div className='pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-[#09090B] to-transparent lg:hidden' />
+              )}
+              {seatScrollState.canScrollRight && (
+                <div className='pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-[#09090B] to-transparent lg:hidden' />
+              )}
+              <div ref={seatRowsScrollRef} className='w-full overflow-x-auto hide-scrollbar-x'>
+                <div className='mx-auto grid min-w-[760px] max-w-4xl grid-cols-2 gap-11 px-1 sm:px-0'>
+                  {groupRows.slice(1).map((rows, index) => (
+                    <div key={index} className='flex flex-col gap-3'>
+                      {rows.map((row) => (
+                        <div key={row}>
+                          {createRow(row)}
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
           <div className='mt-3 flex w-full items-center justify-center gap-3 self-center sm:mt-5'>
